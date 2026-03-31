@@ -20,7 +20,11 @@ SELECT
     NOW()                                           AS updated_at
 FROM raw_order_items oi
 JOIN raw_products p ON p.product_id = oi.product_id
-LEFT JOIN raw_order_item_refunds r ON r.order_item_id = oi.order_item_id
+LEFT JOIN (
+    SELECT order_item_id, SUM(refund_amount_usd) AS refund_amount_usd
+    FROM raw_order_item_refunds
+    GROUP BY order_item_id
+) r ON r.order_item_id = oi.order_item_id
 GROUP BY 1, 2
 ON CONFLICT (year_month, product_name)
 DO UPDATE SET
