@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Basket Craft Sales Pipeline — an ELT pipeline that extracts 8 tables from a MySQL source (`db.isba.co`), loads them into PostgreSQL raw staging tables, and transforms them into a `monthly_sales_summary` analytics table.
+Basket Craft Sales Pipeline — an ELT pipeline that extracts 8 tables from a MySQL source (`db.isba.co`), loads them into PostgreSQL raw staging tables, and transforms them into a `monthly_sales_summary` analytics table. A separate Snowflake loader replicates the raw tables into Snowflake for cloud-based analytics.
 
 ## Commands
 
@@ -30,6 +30,9 @@ pip install -r requirements.txt
 
 # Query Postgres directly
 docker compose exec postgres psql -U basket_craft -d basket_craft_dw
+
+# Load raw tables from Postgres into Snowflake
+python load_snowflake.py
 ```
 
 ## Architecture
@@ -42,9 +45,18 @@ The pipeline follows a three-phase ELT pattern orchestrated by `run_pipeline.py`
 
 `pipeline/config.py` provides connection URL builders and the `SOURCE_TABLES` list that drives extract and load.
 
+### Snowflake Loader
+
+`load_snowflake.py` is a standalone script that reads the 8 `raw_*` tables from Postgres and loads them into Snowflake using truncate-and-reload. It uses `snowflake-connector-python[pandas]` with `write_pandas` for bulk loading.
+
+- **Target:** `SNOWFLAKE_DATABASE`.`SNOWFLAKE_SCHEMA` (e.g. `basket_craft.raw`)
+- **Tables:** Same 8 `RAW_*` tables (uppercase Snowflake convention), DDL in `sql/create_snowflake_raw_tables.sql`
+- **Credentials:** Snowflake env vars in `.env` — `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_PASSWORD`, `SNOWFLAKE_DATABASE`, `SNOWFLAKE_SCHEMA`, `SNOWFLAKE_WAREHOUSE`, and optionally `SNOWFLAKE_ROLE`
+- **Postgres source:** Uses the same `POSTGRES_*` env vars as the main pipeline
+
 ### Idempotency
 
-The pipeline is safe to re-run: raw tables are truncated before reload, and the summary table uses an upsert on `(year_month, product_name)`.
+The pipeline is safe to re-run: raw tables are truncated before reload, and the summary table uses an upsert on `(year_month, product_name)`. The Snowflake loader is also idempotent — it truncates each Snowflake table before reloading.
 
 ### Database Schema
 
@@ -63,4 +75,4 @@ Unit tests mock all database calls (SQLAlchemy engines/connections). Integration
 
 ## Environment
 
-Credentials live in `.env` (gitignored). `POSTGRES_HOST` is `postgres` inside Docker and `localhost` when running locally.
+Credentials live in `.env` (gitignored). `POSTGRES_HOST` is `postgres` inside Docker and `localhost` when running locally. Snowflake credentials (`SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_PASSWORD`, etc.) are also in `.env`.
