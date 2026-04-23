@@ -194,6 +194,11 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# dbt
+target/
+dbt_packages/
+logs/
+
 # Superpowers brainstorming
 .superpowers/
 

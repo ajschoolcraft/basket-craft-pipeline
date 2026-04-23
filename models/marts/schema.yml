@@ -1,0 +1,66 @@
+version: 2
+
+models:
+  - name: fct_monthly_product_performance
+    description: Monthly product profitability by device type and billing region.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - year_month
+              - product_id
+              - device_type
+              - billing_state
+              - billing_country
+    columns:
+      - name: year_month
+        tests:
+          - not_null
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_products')
+                field: product_id
+
+  - name: dim_products
+    description: Product dimension with name and launch date.
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_date
+    description: Month-grain date dimension derived from order activity.
+    columns:
+      - name: year_month
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_device
+    description: Device type dimension from web sessions.
+    columns:
+      - name: device_type
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_region
+    description: Customer billing region dimension.
+    columns:
+      - name: billing_country
+        tests:
+          - not_null
+
+  - name: monthly_sales_summary
+    description: Monthly revenue and profitability summary by product.
+    columns:
+      - name: year_month
+        tests:
+          - not_null
+      - name: product_name
+        tests:
+          - not_null

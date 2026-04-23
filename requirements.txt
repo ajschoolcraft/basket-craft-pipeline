@@ -5,3 +5,4 @@ pandas==2.2.3
 python-dotenv==1.1.0
 pytest==8.3.5
 snowflake-connector-python[pandas]==3.14.0
+dbt-snowflake==1.11.4

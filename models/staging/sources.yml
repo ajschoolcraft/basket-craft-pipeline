@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: raw
+    database: "{{ env_var('SNOWFLAKE_DATABASE') }}"
+    schema: raw
+    tables:
+      - name: raw_orders
+      - name: raw_order_items
+      - name: raw_products
+      - name: raw_order_item_refunds
+      - name: raw_users
+      - name: raw_employees
+      - name: raw_website_sessions
+      - name: raw_website_pageviews

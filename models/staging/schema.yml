@@ -1,0 +1,104 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: Cleaned orders with computed profit.
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: created_at
+        tests:
+          - not_null
+      - name: user_id
+        tests:
+          - not_null
+
+  - name: stg_order_items
+    description: Order line items with boolean primary flag and computed profit.
+    columns:
+      - name: order_item_id
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id
+
+  - name: stg_products
+    description: Product catalog with trimmed names.
+    columns:
+      - name: product_id
+        tests:
+          - unique
+          - not_null
+      - name: product_name
+        tests:
+          - not_null
+
+  - name: stg_order_item_refunds
+    description: Refunds with renamed timestamp.
+    columns:
+      - name: order_item_refund_id
+        tests:
+          - unique
+          - not_null
+      - name: order_item_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_order_items')
+                field: order_item_id
+
+  - name: stg_users
+    description: Users with corrected shipping address column name.
+    columns:
+      - name: user_id
+        tests:
+          - unique
+          - not_null
+      - name: email
+
+  - name: stg_employees
+    description: Employee directory.
+    columns:
+      - name: employee_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_website_sessions
+    description: Sessions with boolean repeat flag.
+    columns:
+      - name: website_session_id
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_website_pageviews
+    description: Page-level hit data.
+    columns:
+      - name: website_pageview_id
+        tests:
+          - unique
+          - not_null
+      - name: website_session_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_website_sessions')
+                field: website_session_id
